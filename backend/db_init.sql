@@ -49,4 +49,20 @@ CREATE TABLE IF NOT EXISTS rates_2025_01 PARTITION OF rates
 CREATE TABLE IF NOT EXISTS rates_2025_02 PARTITION OF rates
     FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
 
+CREATE TABLE IF NOT EXISTS positions (
+    symbol          TEXT NOT NULL,
+    account         TEXT NOT NULL,
+    quote           TEXT NOT NULL,
+    fee_currency    TEXT NOT NULL,
+    qty             NUMERIC(18, 8) NOT NULL,
+    avg_open_price  NUMERIC(18, 8),
+    mark_price      NUMERIC(18, 8),
+    fee             NUMERIC(18, 8) NOT NULL,
+    fee_usd         NUMERIC(18, 8),
+    realized_pnl    NUMERIC(18, 8) NOT NULL,
+    unrealized_pnl  NUMERIC(18, 8),
+    net_pl_usd      NUMERIC(18, 8),
+    PRIMARY KEY (symbol, account, quote, fee_currency)
+);
+
 COMMIT;
