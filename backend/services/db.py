@@ -13,10 +13,10 @@ DB_CONFIG = {
 def get_connection():
     return psycopg2.connect(**DB_CONFIG)
 
-def get_trades():
+def get_trades(limit=100, offset=0):
     connect = get_connection()
     cur = connect.cursor()
-    cur.execute(sql.GET_TRADES)
+    cur.execute(sql.GET_TRADES_PAGINATED, [limit, offset])
     rows = cur.fetchall()
     cur.close()
     connect.close()
@@ -72,7 +72,8 @@ def save_snapshot(calc_date, position):
     cur = connect.cursor()
     quote_rate = get_rate(position.id.quote)
     fee_rate = get_rate(position.id.fee_currency)
-    cur.execute(sql.SAVE_SNAPSHOT, [calc_date, position.id.symbol, position.id.account, position.id.quote, position.id.fee_currency,
+    cur.execute(sql.SAVE_SNAPSHOT, 
+        [calc_date, position.id.symbol, position.id.account, position.id.quote, position.id.fee_currency,
         position.qty(), position.avg_open_price(), position.mark_price, position.fee_total, position.fee_usd(fee_rate),
         position.realized_pnl(), position.unrealized_pnl(), position.net_pl_usd(quote_rate)])
     connect.commit()
@@ -91,9 +92,8 @@ def get_positions():
 def insert_trade(trade):
     connect = get_connection()
     cur = connect.cursor()
-    cur.execute(sql.INSERT_TRADE,
-    [trade["symbol"], trade["account"], trade["quote"], trade["fee_currency"],
-        trade["time"], trade["price"], trade["qty"], trade["fee"]])
+    cur.execute(sql.INSERT_TRADE, [trade["symbol"], trade["account"], trade["quote"],
+    trade["fee_currency"], trade["time"], trade["price"], trade["qty"], trade["fee"]])
     connect.commit()
     cur.close()
     connect.close()
@@ -117,8 +117,34 @@ def insert_rate(rate):
 def insert_reference(refer):
     connect = get_connection()
     cur = connect.cursor()
-    cur.execute(sql.INSERT_REFERENCE, 
-        [refer["symbol"], refer["base_currency"], refer["quote_currency"], refer["exchange"], refer["type"]])
+    cur.execute(sql.INSERT_REFERENCE, [refer["symbol"], refer["base_currency"], refer["quote_currency"], refer["exchange"], refer["type"]])
     connect.commit()
     cur.close()
     connect.close()
+
+def get_reference(symbol):
+    connect = get_connection()
+    cur = connect.cursor()
+    cur.execute(sql.GET_REFERENCE, [symbol])
+    row = cur.fetchone()
+    cur.close()
+    connect.close()
+    return row
+
+def get_prices(symbol):
+    connect = get_connection()
+    cur = connect.cursor()
+    cur.execute(sql.GET_PRICES, [symbol])
+    rows = cur.fetchall()
+    cur.close()
+    connect.close()
+    return rows
+
+def get_rates(currency):
+    connect = get_connection()
+    cur = connect.cursor()
+    cur.execute(sql.GET_RATES, [currency])
+    rows = cur.fetchall()
+    cur.close()
+    connect.close()
+    return rows
