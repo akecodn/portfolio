@@ -18,11 +18,14 @@ GET_PRICES = "SELECT price, time FROM prices WHERE symbol = %s ORDER BY time DES
 
 GET_RATES = "SELECT rate, time FROM rates WHERE currency = %s ORDER BY time DESC"
 
-INSERT_TRADE = "INSERT INTO trades (symbol, account, quote, fee_currency, time, price, qty, fee) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+INSERT_TRADE = """INSERT INTO trades (symbol, account, quote, fee_currency, time, price, qty, fee) 
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING"""
 
-INSERT_PRICE = "INSERT INTO prices (symbol, price, time) VALUES (%s, %s, %s)"
+INSERT_PRICE = """INSERT INTO prices (symbol, price, time) 
+VALUES (%s, %s, %s) ON CONFLICT DO NOTHING"""
 
-INSERT_RATE = "INSERT INTO rates (currency, rate, time) VALUES (%s, %s, %s)"
+INSERT_RATE = """INSERT INTO rates (currency, rate, time) 
+VALUES (%s, %s, %s) ON CONFLICT DO NOTHING"""
 
 INSERT_REFERENCE = "INSERT INTO reference (symbol, base_currency, quote_currency, exchange, type) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (symbol) DO NOTHING"
 

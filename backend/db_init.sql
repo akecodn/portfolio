@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS trades (
     fee           NUMERIC(18, 8) NOT NULL
 ) PARTITION BY RANGE (time);
 CREATE INDEX IF NOT EXISTS trades_symbol_time_idx ON trades (symbol, time DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS trades_uniq ON trades (symbol, account, time, price, qty);
 
 CREATE TABLE IF NOT EXISTS prices (
     symbol   TEXT NOT NULL REFERENCES reference (symbol),
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS prices (
     time     TIMESTAMPTZ NOT NULL
 ) PARTITION BY RANGE (time);
 CREATE INDEX IF NOT EXISTS prices_symbol_time_idx ON prices (symbol, time);
+CREATE UNIQUE INDEX IF NOT EXISTS prices_uniq ON prices (symbol, time);
 
 CREATE TABLE IF NOT EXISTS rates (
     currency  TEXT NOT NULL,
@@ -33,6 +35,7 @@ CREATE TABLE IF NOT EXISTS rates (
     time      TIMESTAMPTZ NOT NULL
 ) PARTITION BY RANGE (time);
 CREATE INDEX IF NOT EXISTS rates_currency_time_idx ON rates (currency, time);
+CREATE UNIQUE INDEX IF NOT EXISTS rates_uniq ON rates (currency, time);
 
 CREATE TABLE IF NOT EXISTS trades_2025_01 PARTITION OF trades
     FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
