@@ -1,13 +1,14 @@
+import os
 import psycopg2
 from decimal import Decimal
 from . import sql
 
 DB_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "database": "pnl_calculation",
-    "user": "postgres",
-    "password": ""
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", 5432)),
+    "database": os.getenv("DB_NAME", "pnl_calculation"),
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD", "")
 }
 
 def get_connection():

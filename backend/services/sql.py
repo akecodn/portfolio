@@ -2,7 +2,7 @@ GET_TRADES = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee
 
 GET_TRADES_PAGINATED = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee FROM trades ORDER BY time LIMIT %s OFFSET %s"
 
-GET_TRADES_BEFORE = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee FROM trades WHERE time::date <= %s ORDER BY time"
+GET_TRADES_UNTIL = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee FROM trades WHERE time::date <= %s ORDER BY time"
 
 GET_PRICE = "SELECT price FROM prices WHERE symbol = %s ORDER BY time DESC LIMIT 1"
 

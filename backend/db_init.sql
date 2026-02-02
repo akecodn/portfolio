@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS reference (
 );
 
 CREATE TABLE IF NOT EXISTS trades (
-    symbol        TEXT NOT NULL REFERENCES reference (symbol),
+    symbol        TEXT NOT NULL,
     account       TEXT NOT NULL,
     quote         TEXT NOT NULL,
     fee_currency  TEXT NOT NULL,
@@ -19,28 +19,42 @@ CREATE TABLE IF NOT EXISTS trades (
     price         NUMERIC(18, 8) NOT NULL,
     qty           NUMERIC(18, 8) NOT NULL,
     fee           NUMERIC(18, 8) NOT NULL
+<<<<<<< HEAD
 ) ;
 SELECT create_hypertable('trades', 'time', if_not_exists => TRUE, chunk_time_interval => interval '1 month');
+=======
+);
+SELECT create_hypertable('trades', 'time', chunk_time_interval => INTERVAL '1 month', if_not_exists => TRUE);
+>>>>>>> 70b515e242298404ac81144933ec1f36cd7ad7e0
 CREATE INDEX IF NOT EXISTS trades_symbol_time_idx ON trades (symbol, time DESC);
-CREATE UNIQUE INDEX IF NOT EXISTS trades_uniq ON trades (symbol, account, time, price, qty);
 
 CREATE TABLE IF NOT EXISTS prices (
-    symbol   TEXT NOT NULL REFERENCES reference (symbol),
+    symbol   TEXT NOT NULL,
     price    NUMERIC(18, 8) NOT NULL,
     time     TIMESTAMPTZ NOT NULL
+<<<<<<< HEAD
 ) ;
 SELECT create_hypertable('prices', 'time', if_not_exists => TRUE, chunk_time_interval => interval '1 month');
+=======
+);
+SELECT create_hypertable('prices', 'time', chunk_time_interval => INTERVAL '1 month', if_not_exists => TRUE);
+>>>>>>> 70b515e242298404ac81144933ec1f36cd7ad7e0
 CREATE INDEX IF NOT EXISTS prices_symbol_time_idx ON prices (symbol, time);
-CREATE UNIQUE INDEX IF NOT EXISTS prices_uniq ON prices (symbol, time);
 
 CREATE TABLE IF NOT EXISTS rates (
     currency  TEXT NOT NULL,
     rate      NUMERIC(18, 8) NOT NULL,
     time      TIMESTAMPTZ NOT NULL
+<<<<<<< HEAD
 ) ;
 SELECT create_hypertable('rates', 'time', if_not_exists => TRUE, chunk_time_interval => interval '1 month');
 CREATE INDEX IF NOT EXISTS rates_currency_time_idx ON rates (currency, time);
 CREATE UNIQUE INDEX IF NOT EXISTS rates_uniq ON rates (currency, time);
+=======
+);
+SELECT create_hypertable('rates', 'time', chunk_time_interval => INTERVAL '1 month', if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS rates_currency_time_idx ON rates (currency, time);
+>>>>>>> 70b515e242298404ac81144933ec1f36cd7ad7e0
 
 CREATE TABLE IF NOT EXISTS snapshots (
     calc_date       DATE NOT NULL,
