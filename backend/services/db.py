@@ -26,7 +26,7 @@ def get_trades(limit=100, offset=0):
 def get_trades_until(calc_date):
     connect = get_connection()
     cur = connect.cursor()
-    cur.execute(sql.GET_TRADES_UNTIL, [calc_date])
+    cur.execute(sql.GET_TRADES_BEFORE, [calc_date])
     rows = cur.fetchall()
     cur.close()
     connect.close()
