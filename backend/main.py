@@ -5,6 +5,8 @@ from services.db import (
     get_reference as db_get_reference, get_prices as db_get_prices, get_rates as db_get_rates
 )
 from models import TradeValid, PriceValid, RateValid, RefValid
+from models import normalize_trade, normalize_price, normalize_rate, normalize_reference
+from calc_pnl import run
 
 app = FastAPI()
 
@@ -14,22 +16,27 @@ def health():
 
 @app.post("/trades")
 def add_trade(trade: TradeValid):
-    insert_trade(trade.model_dump())
+    data = normalize_trade(trade.model_dump())
+    insert_trade(data)
+    run(trade.time.date())
     return {"status": "ok"}
 
 @app.post("/prices")
 def add_price(price: PriceValid):
-    insert_price(price.model_dump())
+    data = normalize_price(price.model_dump())
+    insert_price(data)
     return {"status": "ok"}
 
 @app.post("/rates")
 def add_rate(rate: RateValid):
-    insert_rate(rate.model_dump())
+    data = normalize_rate(rate.model_dump())
+    insert_rate(data)
     return {"status": "ok"}
 
 @app.post("/reference")
 def add_reference(reference: RefValid):
-    insert_reference(reference.model_dump())
+    data = normalize_reference(reference.model_dump())
+    insert_reference(data)
     return {"status": "ok"}
 
 @app.get("/trades")
