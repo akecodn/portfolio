@@ -26,6 +26,18 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
 
+  bff:
+    build: ./bff
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: pnl_calculation
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+
 volumes:
   postgres_data:
-

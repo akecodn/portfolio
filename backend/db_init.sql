@@ -73,4 +73,8 @@ CREATE TABLE IF NOT EXISTS snapshots (
     PRIMARY KEY (calc_date, symbol, account, quote, fee_currency)
 );
 
+CREATE OR REPLACE VIEW positions AS
+SELECT *
+FROM snapshots;
+
 COMMIT;
