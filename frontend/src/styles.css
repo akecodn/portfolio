@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root {
+  color-scheme: light;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 17px;
+  background: #f3f5f7;
+  color: #1b2027;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.page {
+  padding: 28px 36px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #566171;
+  margin-bottom: 6px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.status {
+  font-size: 15px;
+  color: #566171;
+}
+
+.error {
+  background: #fde8e8;
+  color: #8a1f1f;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 16px 6px;
+  color: #6b7787;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.table-card {
+  background: #ffffff;
+  border: 1px solid #e2e6ea;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef1f4;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+th {
+  font-weight: 700;
+  color: #2b3441;
+  background: #f7f8fa;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+td {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+tr:hover td {
+  background: #f9fbff;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 20px 14px 40px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+}
