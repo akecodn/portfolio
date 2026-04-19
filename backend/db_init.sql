@@ -19,42 +19,26 @@ CREATE TABLE IF NOT EXISTS trades (
     price         NUMERIC(18, 8) NOT NULL,
     qty           NUMERIC(18, 8) NOT NULL,
     fee           NUMERIC(18, 8) NOT NULL
-<<<<<<< HEAD
-) ;
-SELECT create_hypertable('trades', 'time', if_not_exists => TRUE, chunk_time_interval => interval '1 month');
-=======
 );
 SELECT create_hypertable('trades', 'time', chunk_time_interval => INTERVAL '1 month', if_not_exists => TRUE);
->>>>>>> 70b515e242298404ac81144933ec1f36cd7ad7e0
 CREATE INDEX IF NOT EXISTS trades_symbol_time_idx ON trades (symbol, time DESC);
 
 CREATE TABLE IF NOT EXISTS prices (
     symbol   TEXT NOT NULL,
     price    NUMERIC(18, 8) NOT NULL,
     time     TIMESTAMPTZ NOT NULL
-<<<<<<< HEAD
-) ;
-SELECT create_hypertable('prices', 'time', if_not_exists => TRUE, chunk_time_interval => interval '1 month');
-=======
 );
 SELECT create_hypertable('prices', 'time', chunk_time_interval => INTERVAL '1 month', if_not_exists => TRUE);
->>>>>>> 70b515e242298404ac81144933ec1f36cd7ad7e0
 CREATE INDEX IF NOT EXISTS prices_symbol_time_idx ON prices (symbol, time);
 
 CREATE TABLE IF NOT EXISTS rates (
     currency  TEXT NOT NULL,
     rate      NUMERIC(18, 8) NOT NULL,
     time      TIMESTAMPTZ NOT NULL
-<<<<<<< HEAD
-) ;
-SELECT create_hypertable('rates', 'time', if_not_exists => TRUE, chunk_time_interval => interval '1 month');
-CREATE INDEX IF NOT EXISTS rates_currency_time_idx ON rates (currency, time);
-CREATE UNIQUE INDEX IF NOT EXISTS rates_uniq ON rates (currency, time);
-=======
 );
 SELECT create_hypertable('rates', 'time', chunk_time_interval => INTERVAL '1 month', if_not_exists => TRUE);
 CREATE INDEX IF NOT EXISTS rates_currency_time_idx ON rates (currency, time);
->>>>>>> 70b515e242298404ac81144933ec1f36cd7ad7e0
+CREATE UNIQUE INDEX IF NOT EXISTS rates_uniq ON rates (currency, time);
 
 CREATE TABLE IF NOT EXISTS snapshots (
     calc_date       DATE NOT NULL,
@@ -73,8 +57,29 @@ CREATE TABLE IF NOT EXISTS snapshots (
     PRIMARY KEY (calc_date, symbol, account, quote, fee_currency)
 );
 
+CREATE TABLE IF NOT EXISTS books (
+    id          BIGSERIAL PRIMARY KEY,
+    name        TEXT NOT NULL UNIQUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS book_accounts (
+    book_id     BIGINT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    account     TEXT NOT NULL,
+    PRIMARY KEY (book_id, account),
+    UNIQUE (account)
+);
+
+CREATE INDEX IF NOT EXISTS book_accounts_account_idx ON book_accounts (account);
+
 CREATE OR REPLACE VIEW positions AS
-SELECT *
-FROM snapshots;
+SELECT
+    s.*,
+    b.name AS book
+FROM snapshots AS s
+LEFT JOIN book_accounts AS ba
+    ON ba.account = s.account
+LEFT JOIN books AS b
+    ON b.id = ba.book_id;
 
 COMMIT;

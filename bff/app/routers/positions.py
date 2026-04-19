@@ -14,6 +14,7 @@ def get_positions(
     calc_date: Optional[date] = None,
     symbol: Optional[str] = None,
     account: Optional[str] = None,
+    book: Optional[str] = None,
     quote: Optional[str] = None,
     fee_currency: Optional[str] = None,
 ):
@@ -21,6 +22,8 @@ def get_positions(
         symbol = symbol.strip().upper()
     if account:
         account = account.strip()
+    if book:
+        book = book.strip()
     if quote:
         quote = quote.strip().upper()
     if fee_currency:
@@ -30,6 +33,7 @@ def get_positions(
         calc_date=calc_date,
         symbol=symbol,
         account=account,
+        book=book,
         quote=quote,
         fee_currency=fee_currency,
     )

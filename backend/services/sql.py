@@ -1,5 +1,3 @@
-GET_TRADES = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee FROM trades ORDER BY time"
-
 GET_TRADES_PAGINATED = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee FROM trades ORDER BY time LIMIT %s OFFSET %s"
 
 GET_TRADES_UNTIL = "SELECT symbol, account, quote, fee_currency, time, price, qty, fee FROM trades WHERE time::date <= %s ORDER BY time"
