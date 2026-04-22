@@ -1,10 +1,11 @@
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class PositionOut(BaseModel):
     symbol: str
     account: str
+    book: Optional[str] = None
     quote: str
     fee_currency: str
     qty: Decimal
@@ -15,3 +16,17 @@ class PositionOut(BaseModel):
     realized_pnl: Decimal
     unrealized_pnl: Optional[Decimal] = None
     net_pl_usd: Optional[Decimal] = None
+
+
+class BookOut(BaseModel):
+    id: int
+    name: str
+    accounts: list[str]
+
+
+class BookCreateIn(BaseModel):
+    name: str
+
+
+class BookAccountsIn(BaseModel):
+    accounts: list[str] = Field(default_factory=list)
