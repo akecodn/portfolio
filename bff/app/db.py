@@ -1,8 +1,11 @@
 import psycopg2
+
 from .config import DB_CONFIG
+
 
 def get_connection():
     return psycopg2.connect(**DB_CONFIG)
+
 
 def ensure_books_schema():
     connect = get_connection()
@@ -21,16 +24,16 @@ def ensure_books_schema():
         CREATE TABLE IF NOT EXISTS book_accounts (
             book_id BIGINT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
             account TEXT NOT NULL,
-            PRIMARY KEY (book_id, account)
+            PRIMARY KEY (book_id, account),
+            UNIQUE (account)
         );
         """
     )
-    cur.execute(
-        "CREATE INDEX IF NOT EXISTS book_accounts_account_idx ON book_accounts (account);"
-    )
+    cur.execute("CREATE INDEX IF NOT EXISTS book_accounts_account_idx ON book_accounts (account);")
     connect.commit()
     cur.close()
     connect.close()
+
 
 def get_positions(
     calc_date=None,
@@ -45,14 +48,17 @@ def get_positions(
     ensure_books_schema()
     connect = get_connection()
     cur = connect.cursor()
-    query = ("SELECT p.symbol, p.account, b.name AS book, p.quote, p.fee_currency, p.qty, p.avg_open_price, "
+    query = (
+        "SELECT p.symbol, p.account, b.name AS book, p.quote, p.fee_currency, p.qty, p.avg_open_price, "
         "p.mark_price, p.fee, p.fee_usd, p.realized_pnl, p.unrealized_pnl, p.net_pl_usd "
         "FROM positions p "
         "LEFT JOIN book_accounts ba ON ba.account = p.account "
         "LEFT JOIN books b ON b.id = ba.book_id"
     )
+
     where_clauses = ["b.id IS NOT NULL"]
     params = []
+
     if calc_date is not None:
         where_clauses.append("p.calc_date = %s")
         params.append(calc_date)
@@ -74,6 +80,7 @@ def get_positions(
             params.append(calc_date_to)
         else:
             where_clauses.append("p.calc_date = (SELECT MAX(calc_date) FROM positions)")
+
     if symbol:
         where_clauses.append("p.symbol = %s")
         params.append(symbol)
@@ -89,6 +96,7 @@ def get_positions(
     if fee_currency:
         where_clauses.append("p.fee_currency = %s")
         params.append(fee_currency)
+
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
     query += " ORDER BY p.symbol, p.account"
@@ -109,10 +117,13 @@ def get_accounts():
         """
         SELECT account
         FROM (
+            SELECT DISTINCT account FROM snapshots
+            UNION
             SELECT DISTINCT account FROM trades
             UNION
             SELECT DISTINCT account FROM book_accounts
         ) all_accounts
+        WHERE account IS NOT NULL
         ORDER BY account;
         """
     )

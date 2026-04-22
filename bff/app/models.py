@@ -1,6 +1,8 @@
 from decimal import Decimal
 from typing import Optional
+
 from pydantic import BaseModel, Field
+
 
 class PositionOut(BaseModel):
     symbol: str
