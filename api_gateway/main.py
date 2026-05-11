@@ -15,6 +15,7 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 RECALC_QUEUE_NAME = os.getenv("RECALC_QUEUE_NAME", "recalc_queue")
 RECALC_PENDING_PREFIX = os.getenv("RECALC_PENDING_PREFIX", "recalc_pending")
+RECALC_DLQ_NAME = os.getenv("RECALC_DLQ_NAME", "recalc_dlq")
 RECALC_PENDING_TTL_SEC = int(os.getenv("RECALC_PENDING_TTL_SEC", "1800"))
 
 app = FastAPI(title="API Gateway")
@@ -93,7 +94,14 @@ def _queue_recalc(calc_date_iso: str) -> bool:
     pending_key = f"{RECALC_PENDING_PREFIX}:{calc_date_iso}"
 
     if client.set(pending_key, "1", nx=True, ex=RECALC_PENDING_TTL_SEC):
-        payload = json.dumps({"calc_date": calc_date_iso, "queued_at": datetime.now(timezone.utc).isoformat()})
+        payload = json.dumps(
+            {
+                "calc_date": calc_date_iso,
+                "queued_at": datetime.now(timezone.utc).isoformat(),
+                "retry": 0,
+                "source": "api_gateway",
+            }
+        )
         client.lpush(RECALC_QUEUE_NAME, payload)
         return True
     return False
@@ -102,11 +110,21 @@ def _queue_recalc(calc_date_iso: str) -> bool:
 @app.get("/health")
 def health():
     redis_ok = False
+    recalc_queue_len = None
+    recalc_dlq_len = None
     try:
-        redis_ok = bool(_get_redis().ping())
+        client = _get_redis()
+        redis_ok = bool(client.ping())
+        recalc_queue_len = int(client.llen(RECALC_QUEUE_NAME))
+        recalc_dlq_len = int(client.llen(RECALC_DLQ_NAME))
     except Exception:
         redis_ok = False
-    return {"status": "ok", "redis": redis_ok}
+    return {
+        "status": "ok",
+        "redis": redis_ok,
+        "recalc_queue_len": recalc_queue_len,
+        "recalc_dlq_len": recalc_dlq_len,
+    }
 
 
 @app.post("/trades")
