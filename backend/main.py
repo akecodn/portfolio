@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from services.db import (
     insert_trade, insert_price, insert_rate, insert_reference,
@@ -9,6 +11,7 @@ from models import normalize_trade, normalize_price, normalize_rate, normalize_r
 from calc_pnl import run
 
 app = FastAPI()
+RECALC_MODE = os.getenv("RECALC_MODE", "sync").strip().lower()
 
 @app.get("/health")
 def health():
@@ -18,7 +21,8 @@ def health():
 def add_trade(trade: TradeValid):
     data = normalize_trade(trade.model_dump())
     insert_trade(data)
-    run(trade.time.date())
+    if RECALC_MODE != "async":
+        run(trade.time.date())
     return {"status": "ok"}
 
 @app.post("/prices")
