@@ -11,8 +11,32 @@ DB_CONFIG = {
     "password": os.getenv("DB_PASSWORD", "")
 }
 
+_snapshot_schema_ready = False
+
 def get_connection():
     return psycopg2.connect(**DB_CONFIG)
+
+
+def ensure_snapshot_schema():
+    global _snapshot_schema_ready
+    if _snapshot_schema_ready:
+        return
+    connect = get_connection()
+    cur = connect.cursor()
+    cur.execute("ALTER TABLE snapshots ADD COLUMN IF NOT EXISTS calc_time TIMESTAMPTZ;")
+    cur.execute(
+        """
+        UPDATE snapshots
+        SET calc_time = COALESCE(calc_time, calc_date::timestamptz)
+        WHERE calc_time IS NULL
+        """
+    )
+    cur.execute("ALTER TABLE snapshots ALTER COLUMN calc_time SET NOT NULL;")
+    cur.execute("CREATE INDEX IF NOT EXISTS snapshots_calc_time_idx ON snapshots (calc_time DESC);")
+    connect.commit()
+    cur.close()
+    connect.close()
+    _snapshot_schema_ready = True
 
 def get_trades(limit=100, offset=0):
     connect = get_connection()
@@ -68,13 +92,14 @@ def get_rate(currency):
     else:
         return Decimal(1)
 
-def save_snapshot(calc_date, position):
+def save_snapshot(calc_date, calc_time, position):
+    ensure_snapshot_schema()
     connect = get_connection()
     cur = connect.cursor()
     quote_rate = get_rate(position.id.quote)
     fee_rate = get_rate(position.id.fee_currency)
     cur.execute(sql.SAVE_SNAPSHOT, 
-        [calc_date, position.id.symbol, position.id.account, position.id.quote, position.id.fee_currency,
+        [calc_date, calc_time, position.id.symbol, position.id.account, position.id.quote, position.id.fee_currency,
         position.qty(), position.avg_open_price(), position.mark_price, position.fee_total, position.fee_usd(fee_rate),
         position.realized_pnl(), position.unrealized_pnl(), position.net_pl_usd(quote_rate)])
     connect.commit()
@@ -82,6 +107,7 @@ def save_snapshot(calc_date, position):
     connect.close()
 
 def get_positions():
+    ensure_snapshot_schema()
     connect = get_connection()
     cur = connect.cursor()
     cur.execute(sql.GET_POSITIONS)

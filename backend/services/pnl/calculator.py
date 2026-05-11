@@ -3,6 +3,7 @@ from .models import PositionId, Trade, FifoPosition, EPS
 
 def apply_trade(position, trade):
     position.fee_total += trade.fee
+    position.last_trade_time = trade.time
     qty = trade.qty
     price = trade.price
     if qty > Decimal(0):
