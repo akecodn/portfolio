@@ -11,31 +11,134 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db_init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  api:
-    build: ./backend
+  redis:
+    image: redis:7-alpine
     ports:
-      - "8000:8000"
+      - "6379:6379"
+
+  pnl-service:
+    build: ./backend
     depends_on:
       - db
+      - redis
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: pnl_calculation
       DB_USER: postgres
       DB_PASSWORD: postgres
+      RECALC_MODE: async
+
+  pnl-worker:
+    build: ./backend
+    command: ["python", "worker.py"]
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: pnl_calculation
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      RECALC_QUEUE_NAME: recalc_queue
+      RECALC_PENDING_PREFIX: recalc_pending
+
+  api-gateway:
+    build: ./api_gateway
+    depends_on:
+      - pnl-service
+      - redis
+    ports:
+      - "8000:8000"
+    environment:
+      PNL_SERVICE_URL: http://pnl-service:8000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      RECALC_QUEUE_NAME: recalc_queue
+      RECALC_PENDING_PREFIX: recalc_pending
+      RECALC_PENDING_TTL_SEC: 1800
 
   bff:
     build: ./bff
-    ports:
-      - "8001:8001"
     depends_on:
       - db
+    ports:
+      - "8001:8001"
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: pnl_calculation
       DB_USER: postgres
       DB_PASSWORD: postgres
+      AUTH_SECRET: portfolio-dev-secret
+      AUTH_TOKEN_TTL_SECONDS: 86400
+
+  trade-streaming-service:
+    build: ./trade_streaming_service
+    depends_on:
+      - api-gateway
+    ports:
+      - "8101:8101"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+      GENERATOR_AUTOSTART: "false"
+      BYBIT_TESTNET_BASE_URL: https://api-testnet.bybit.com
+      BYBIT_CATEGORY: linear
+      BYBIT_TIMEOUT_SEC: 8
+      BYBIT_DEFAULT_ACCOUNT: acc_bybit_testnet
+      BYBIT_FEE_RATE: "0.0006"
+
+  price-streaming-service:
+    build: ./price_streaming_service
+    depends_on:
+      - api-gateway
+    ports:
+      - "8102:8102"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+      GENERATOR_AUTOSTART: "false"
+      BYBIT_TESTNET_BASE_URL: https://api-testnet.bybit.com
+      BYBIT_CATEGORY: linear
+      BYBIT_TIMEOUT_SEC: 8
+
+  fx-rates-service:
+    build: ./fx_rates_service
+    depends_on:
+      - api-gateway
+    ports:
+      - "8103:8103"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+      GENERATOR_AUTOSTART: "false"
+
+  reference-data-service:
+    build: ./reference_data_service
+    depends_on:
+      - api-gateway
+    ports:
+      - "8104:8104"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+      GENERATOR_AUTOSTART: "false"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - bff
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://bff:8001
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   postgres_data:
