@@ -7,3 +7,8 @@ DB_CONFIG = {
     "user": os.getenv("DB_USER", "postgres"),
     "password": os.getenv("DB_PASSWORD", ""),
 }
+
+AUTH_SECRET = os.getenv("AUTH_SECRET", "change-me-in-production")
+AUTH_TOKEN_TTL_SECONDS = int(os.getenv("AUTH_TOKEN_TTL_SECONDS", "28800"))
+AUTH_ADMIN_USERNAME = os.getenv("AUTH_ADMIN_USERNAME", "").strip()
+AUTH_ADMIN_PASSWORD = os.getenv("AUTH_ADMIN_PASSWORD", "")

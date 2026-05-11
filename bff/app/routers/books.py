@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from psycopg2 import IntegrityError
 
+from ..auth import require_books_access
 from ..db import (
     create_book as db_create_book,
     delete_book as db_delete_book,
@@ -26,17 +27,17 @@ def normalize_accounts(accounts: list[str]) -> list[str]:
 
 
 @router.get("/accounts", response_model=list[str])
-def get_accounts():
+def get_accounts(_: dict = Depends(require_books_access)):
     return db_get_accounts()
 
 
 @router.get("/books", response_model=list[BookOut])
-def get_books():
+def get_books(_: dict = Depends(require_books_access)):
     return db_get_books()
 
 
 @router.post("/books", response_model=BookOut, status_code=status.HTTP_201_CREATED)
-def create_book(payload: BookCreateIn):
+def create_book(payload: BookCreateIn, _: dict = Depends(require_books_access)):
     try:
         return db_create_book(payload.name)
     except ValueError as exc:
@@ -46,12 +47,14 @@ def create_book(payload: BookCreateIn):
 
 
 @router.put("/books/{book_id}/accounts", response_model=BookOut)
-def set_book_accounts(book_id: int, payload: BookAccountsIn):
+def set_book_accounts(book_id: int, payload: BookAccountsIn, _: dict = Depends(require_books_access)):
     accounts = normalize_accounts(payload.accounts)
     try:
         return db_update_book_accounts(book_id, accounts)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Book not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except IntegrityError as exc:
         raise HTTPException(
             status_code=409,
@@ -60,7 +63,7 @@ def set_book_accounts(book_id: int, payload: BookAccountsIn):
 
 
 @router.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_book(book_id: int):
+def delete_book(book_id: int, _: dict = Depends(require_books_access)):
     deleted = db_delete_book(book_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Book not found")
