@@ -46,6 +46,9 @@ services:
       REDIS_DB: 0
       RECALC_QUEUE_NAME: recalc_queue
       RECALC_PENDING_PREFIX: recalc_pending
+      RECALC_DLQ_NAME: recalc_dlq
+      RECALC_MAX_RETRIES: 3
+      RECALC_RETRY_BACKOFF_SEC: 0.5
 
   api-gateway:
     build: ./api_gateway
@@ -61,6 +64,7 @@ services:
       REDIS_DB: 0
       RECALC_QUEUE_NAME: recalc_queue
       RECALC_PENDING_PREFIX: recalc_pending
+      RECALC_DLQ_NAME: recalc_dlq
       RECALC_PENDING_TTL_SEC: 1800
 
   bff:
