@@ -39,6 +39,7 @@ class FifoPosition:
         self.realized = Decimal(0)
         self.fee_total = Decimal(0)
         self.mark_price = None
+        self.last_trade_time = None
 
     def qty(self):
         long_sum = sum(lot[0] for lot in self.long_lots)

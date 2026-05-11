@@ -42,6 +42,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS rates_uniq ON rates (currency, time);
 
 CREATE TABLE IF NOT EXISTS snapshots (
     calc_date       DATE NOT NULL,
+    calc_time       TIMESTAMPTZ NOT NULL,
     symbol          TEXT NOT NULL,
     account         TEXT NOT NULL,
     quote           TEXT NOT NULL,
@@ -56,6 +57,13 @@ CREATE TABLE IF NOT EXISTS snapshots (
     net_pl_usd      NUMERIC(18, 8),
     PRIMARY KEY (calc_date, symbol, account, quote, fee_currency)
 );
+
+ALTER TABLE snapshots ADD COLUMN IF NOT EXISTS calc_time TIMESTAMPTZ;
+UPDATE snapshots
+SET calc_time = COALESCE(calc_time, calc_date::timestamptz)
+WHERE calc_time IS NULL;
+ALTER TABLE snapshots ALTER COLUMN calc_time SET NOT NULL;
+CREATE INDEX IF NOT EXISTS snapshots_calc_time_idx ON snapshots (calc_time DESC);
 
 CREATE TABLE IF NOT EXISTS books (
     id          BIGSERIAL PRIMARY KEY,
@@ -72,9 +80,23 @@ CREATE TABLE IF NOT EXISTS book_accounts (
 
 CREATE INDEX IF NOT EXISTS book_accounts_account_idx ON book_accounts (account);
 
-CREATE OR REPLACE VIEW positions AS
+DROP VIEW IF EXISTS positions;
+CREATE VIEW positions AS
 SELECT
-    s.*,
+    s.calc_date,
+    s.calc_time,
+    s.symbol,
+    s.account,
+    s.quote,
+    s.fee_currency,
+    s.qty,
+    s.avg_open_price,
+    s.mark_price,
+    s.fee,
+    s.fee_usd,
+    s.realized_pnl,
+    s.unrealized_pnl,
+    s.net_pl_usd,
     b.name AS book
 FROM snapshots AS s
 LEFT JOIN book_accounts AS ba
